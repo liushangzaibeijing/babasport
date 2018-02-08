@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.babasport.xiu.core.dao.TypeDao">
+    <!-- resultMap映射   -->
+    <resultMap type="type" id="typeMap">
+        <result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="parentId" column="parent_id" />
+		<result property="note" column="note" />
+		<result property="isDisplay" column="is_display" />
+    </resultMap>
+    <!-- 查询 查询所有字段，查询指定的字段 sql片段 -->
+    <sql id="typeQueryField">
+       SELECT  
+       <if test="fields!=null"> 
+          ${fields}
+       </if>
+       <if test="fields==null">
+          id,name,parent_id,note,is_display
+       </if>
+       FROM bbs_type
+    </sql>
+    
+    <!-- 条件查询 sql片段-->
+    <sql id="typeWhere">
+       <where>
+           <if test="id!=null">
+             and id = #{id} 
+           </if>
+           <if test="name!=null">
+              <if test="nameLike == false">
+                 and name = #{name} 
+              </if>
+              <if test="nameLike == true">
+                 and name like '%${name}%' 
+              </if>
+            </if>
+            <if test="parentId!=null">
+               and parentId = #{parentId} 
+            </if>
+            <if test="note!=null">
+              <if test="noteLike == false">
+                 and note = #{note} 
+              </if>
+              <if test="noteLike == true">
+                 and note like '%${note}%' 
+              </if>
+            </if>
+            <if test="isDisplay!=null">
+               and is_display = #{isDisplay} 
+            </if>
+       </where>
+    </sql>
+    
+    <!-- 排序sql片段 -->
+    <sql id="typeOrder">
+       <if test="orderFields != null and orderFields.size >0">
+         ORDER BY
+	       <foreach collection="orderFields" separator="," item="orderField">
+	          ${orderField.fieldName} ${orderField.order}
+	       </foreach>
+	    </if>
+    </sql>
+    <!-- 分页sql片段 -->
+    <sql id="typePage">
+        LIMIT 
+        <if test="startRow != null">
+			 #{startRow},#{pageSize}
+		</if>
+    </sql>
+    
+    <!-- 根据主键查询 -->
+    <select id="getTypeBykey" parameterType="int" resultMap="typeMap">
+     SELECT id,name,parent_id,note,is_display
+     FROM bbs_type
+		WHERE
+		id=#{id}
+    </select>
+    
+    <!-- 根据多个主键查询 -->
+    <select id="getTypeBykeys" parameterType="list" resultMap="typeMap">
+     SELECT id,name,parent_id,note,is_display
+     FROM bbs_type
+		WHERE
+		id in 
+		<foreach collection="list" separator="," item="id" open="(" close=")">
+		   #{id}
+		</foreach>
+    </select>
+    
+    <!-- 查询所有不分页-->
+    <select id="getTypeListNoPage" parameterType="typeQuery" resultMap="typeMap">
+       <include refid="typeQueryField" />
+       <include refid="typeWhere" />
+       <include refid="typeOrder" />
+    </select>
+    
+     <!-- 查询所有不分页-->
+    <select id="getTypeList" parameterType="typeQuery" resultMap="typeMap">
+       <include refid="typeQueryField" />
+    </select>
+    <!-- 查询所有分页 -->
+     <select id="getTypeListWithPage" parameterType="typeQuery" resultMap="typeMap">
+       <include refid="typeQueryField" />
+       <include refid="typeWhere" />
+       <include refid="typeOrder" />
+       <include refid="typePage" />
+    </select>
+    <!-- 查询记录总数 -->
+    <select id="getTypeCounts" parameterType="typeQuery" resultType="int">
+       SELECT count(1) FROM bbs_type
+       <include refid="typeWhere" />
+    </select>
+    
+    <!-- 增加操作 -->
+    <!-- useGeneratedKeys 是否使用自增主键，keyProperty将插入操作完成后的主键绑定到对象的id字段中 -->
+    <insert id="addType" parameterType="type" useGeneratedKeys="true" keyProperty="id">
+       INSERT INTO bbs_type
+       <trim prefix="(" suffix=")" suffixOverrides=",">
+         <if test="id!=null"> 
+           id,
+         </if>
+         <if test="name!=null">
+           name,
+         </if>
+          <if test="parentId!=null">
+           parent_id,
+         </if>
+          <if test="note!=null">
+           note,
+         </if>
+          <if test="isDisplay!=null">
+           is_display,
+         </if>
+       </trim>
+    VALUES   
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+         <if test="id!=null"> 
+           id,
+         </if>
+         <if test="name!=null">
+           name,
+         </if>
+          <if test="parentId!=null">
+           parent_id,
+         </if>
+          <if test="note!=null">
+           note,
+         </if>
+          <if test="isDisplay!=null">
+           is_display,
+         </if>
+       </trim>
+    </insert>
+    
+    <!-- 更新操作 -->
+    <update id="updateTypeByKey" parameterType="type">
+       UPDATE bbs_type
+       <set>
+			<trim suffixOverrides=",">
+				<if test="id!=null"> 
+		           id=#{id},
+		         </if>
+		         <if test="name!=null">
+		           name=#{name},
+		         </if>
+		          <if test="parentId!=null">
+		           parent_id=#{parentId},
+		         </if>
+		          <if test="note!=null">
+		           note=#{note},
+		         </if>
+		          <if test="isDisplay!=null">
+		           is_display=#{isDisplay},
+		         </if>
+			</trim>
+		</set>
+		WHERE
+		id=#{id}
+    </update>
+    
+    <!-- 删除单个 -->
+    <delete id="deleteTypeOne" parameterType="int">
+      DELETE FROM bbs_type
+      WHERE id = #{id}
+    </delete>
+    <!-- 批量删除 -->
+    <delete id="deleteTypeMutil" parameterType="list">
+       DELETE FROM bbs_type
+       WHERE id in
+       <foreach collection="list" item="id" separator="," open="(" close=")">
+          #{id}
+       </foreach>
+    </delete>
+    
+</mapper>

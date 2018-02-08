@@ -1,0 +1,536 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.babasport.xiu.core.dao.ProductDao">
+    <!-- resultMap映射 -->
+    <resultMap type="product" id="productMap">
+        <result property="id" column="id" />
+		<result property="no" column="no" />
+		<result property="name" column="name" />
+		<result property="weight" column="weight" />
+		<result property="isNew" column="is_new" />
+		<result property="isHot" column="is_hot" />
+		<result property="isCommend" column="is_commend" />
+		<result property="createTime" column="create_time" />
+		<result property="createUserId" column="create_user_id" />
+		<result property="checkTime" column="check_time" />
+		<result property="checkUserId" column="check_user_id" />
+		<result property="isShow" column="is_show" />
+		<result property="isDel" column="is_del" />
+		<result property="typeId" column="type_id" />
+		<result property="brandId" column="brand_id" />
+		<result property="keywords" column="keywords" />
+		<result property="sales" column="sales" />
+		<result property="description" column="description" />
+		<result property="packageList" column="package_list" />
+		<result property="feature" column="feature" />
+		<result property="color" column="color" />
+		<result property="size" column="size" />
+    </resultMap>
+    <!-- 查询 查询所有字段，查询指定的字段 sql片段 -->
+    <sql id="productQueryField">
+       SELECT
+       <if test="fields!=null"> 
+          ${fields}
+       </if>
+       <if test="fields==null">
+          id,no,name,weight,is_new,is_hot,is_commend,
+          create_time,create_user_id,check_time,check_user_id,is_show,is_del,type_id,
+          brand_id,keywords,sales,description,package_list,feature,color,size
+       </if>
+       FROM bbs_product
+    </sql>
+    
+    <!-- 条件查询 sql片段-->   
+    <sql id="productWhere">
+       <where>
+          <if test="id!=null">
+             and id = #{id} 
+          </if>
+           <if test="no!=null">
+              <if test="noLike == false">
+                 and no = #{no} 
+              </if>
+              <if test="noLike == true">
+                 and no like '%${no}%' 
+                 <!--and no like "%"#{no}"%"  -->
+              </if>
+          </if>
+          <if test="name != null">
+				<if test="nameLike == false">
+					and name=#{name}
+				</if>
+				<if test="nameLike == true">
+					and  name like '%${name}%'
+				</if>
+				</if>
+				<if test="weight != null">
+					and weight=#{weight}
+				</if>
+				<if test="isNew != null">
+					and is_new=#{isNew}
+				</if>
+				<if test="isHot != null">
+					and is_hot=#{isHot}
+				</if>
+				<if test="isCommend != null">
+					and is_commend=#{isCommend}
+				</if>
+				<if test="createTime != null">
+					and create_time=#{createTime}
+				</if>
+				<if test="createUserId != null">
+				<if test="createUserIdLike == false">
+					and create_user_id=#{createUserId}
+				</if>
+				<if test="createUserIdLike == true">
+					and  create_user_id like '%${createUserId}%'
+				</if>
+				</if>
+				<if test="checkTime != null">
+					and check_time=#{checkTime}
+				</if>
+				<if test="checkUserId != null">
+				<if test="checkUserIdLike == false">
+					and check_user_id=#{checkUserId}
+				</if>
+				<if test="checkUserIdLike == true">
+					and  check_user_id like '%${checkUserId}%'
+				</if>
+				</if>
+				<if test="isShow != null">
+					and is_show=#{isShow}
+				</if>
+				<if test="isDel != null">
+					and is_del=#{isDel}
+				</if>
+				<if test="typeId != null">
+					and type_id=#{typeId}
+				</if>
+				<if test="brandId != null">
+					and brand_id=#{brandId}
+				</if>
+				<if test="keywords != null">
+				<if test="keywordsLike == false">
+					and keywords=#{keywords}
+				</if>
+				<if test="keywordsLike == true">
+					and  keywords like '%${keywords}%'
+				</if>
+				</if>
+				<if test="sales != null">
+					and sales=#{sales}
+				</if>
+				<if test="description != null">
+				<if test="descriptionLike == false">
+					and description=#{description}
+				</if>
+				<if test="descriptionLike == true">
+					and  description like '%${description}%'
+				</if>
+				</if>
+				<if test="packageList != null">
+				<if test="packageListLike == false">
+					and package_list=#{packageList}
+				</if>
+				<if test="packageListLike == true">
+					and  package_list like '%${packageList}%'
+				</if>
+				</if>
+				<if test="feature != null">
+				<if test="featureLike == false">
+					and feature=#{feature}
+				</if>
+				<if test="featureLike == true">
+					and  feature like '%${feature}%'
+				</if>
+				</if>
+				<if test="color != null">
+				<if test="colorLike == false">
+					and color=#{color}
+				</if>
+				<if test="colorLike == true">
+					and  color like '%${color}%'
+				</if>
+				</if>
+				<if test="size != null">
+				<if test="sizeLike == false">
+					and size=#{size}
+				</if>
+				<if test="sizeLike == true">
+					and  size like '%${size}%'
+				</if>
+				</if>
+       </where>
+    </sql>
+    
+    <!-- 排序sql片段 -->
+    <sql id="productOrder">
+       <if test="orderFields != null and orderFields.size >0">
+         ORDER BY
+	       <foreach collection="orderFields" separator="," item="orderField">
+	          ${orderField.fieldName} ${orderField.order}
+	       </foreach>
+	    </if>
+    </sql>
+    
+     <sql id="ProductFilterOrder">
+       <if test="productQuery.orderFields != null and productQuery.orderFields.size >0">
+         ORDER BY
+	       <foreach collection="productQuery.orderFields" separator="," item="orderField">
+	          ${orderField.fieldName} ${orderField.order}
+	       </foreach>
+	    </if>
+    </sql>
+    
+    <!-- 分页sql片段 -->
+    <sql id="productPage">
+        LIMIT 
+        <if test="startRow != null">
+			 #{startRow},#{pageSize}
+		</if>
+    </sql>
+    
+    <!-- 根据主键查询 -->
+    <select id="getProductBykey" parameterType="int" resultMap="productMap">
+     SELECT id,no,name,weight,is_new,is_hot,is_commend,create_time,create_user_id,
+            check_time,check_user_id,is_show,is_del,type_id,brand_id,keywords,sales,
+            description,package_list,feature,color,size
+     FROM bbs_product
+		WHERE
+		id=#{id}
+    </select>
+    
+    <!-- 根据多个主键查询 -->
+    <select id="getProductBykeys" parameterType="list" resultMap="productMap">
+     SELECT id,no,name,weight,is_new,is_hot,is_commend,create_time,create_user_id,
+            check_time,check_user_id,is_show,is_del,type_id,brand_id,keywords,sales,
+            description,package_list,feature,color,size
+     FROM bbs_product
+		WHERE
+		id in 
+		<foreach collection="list" separator="," item="id" open="(" close=")">
+		   #{id}
+		</foreach>
+    </select>
+    
+    <!-- 查询所有不分页-->
+    <select id="getProductListNoPage" parameterType="productQuery" resultMap="productMap">
+       <include refid="productQueryField" />
+       <include refid="productWhere" />
+       <include refid="productOrder" />
+    </select>
+    <!-- 查询所有分页 -->
+     <select id="getProductListWithPage" parameterType="productQuery" resultMap="productMap">
+       <include refid="productQueryField" />
+       <include refid="productWhere" />
+       <include refid="productOrder" />
+       <include refid="productPage" />
+    </select>
+    <!-- 查询记录总数 -->
+    <select id="getProductCounts" parameterType="productQuery" resultType="int">
+       SELECT count(1) FROM bbs_product
+       <include refid="productWhere" />
+    </select>
+    
+    <!-- 增加操作 -->
+    <!-- useGeneratedKeys 是否使用自增主键，keyProperty将插入操作完成后的主键绑定到对象的id字段中 -->
+    <insert id="addProduct" parameterType="product" useGeneratedKeys="true" keyProperty="id">
+       INSERT INTO bbs_product
+       <trim prefix="(" suffix=")" suffixOverrides=",">
+         <if test="id!=null">
+           id,
+         </if>
+          <if test="no!=null">
+           no,
+         </if>
+          <if test="name!=null">
+           name,
+         </if>
+          <if test="weight!=null">
+           weight,
+         </if>
+          <if test="isNew!=null">
+           is_new,
+         </if>
+          <if test="isHot!=null">
+           is_hot,
+         </if>
+          <if test="isCommend!=null">
+           is_commend,
+         </if>
+          <if test="createTime!=null">
+           create_time,
+         </if>
+          <if test="createUserId!=null">
+           create_user_id,
+         </if>
+          <if test="checkTime!=null">
+           check_time,
+         </if>
+          <if test="checkUserId!=null">
+           check_user_id,
+         </if>
+          <if test="isShow!=null">
+           is_show,
+         </if>
+          <if test="isDel!=null">
+           is_del,
+         </if>
+          <if test="typeId!=null">
+           type_id,
+         </if>
+          <if test="brandId!=null">
+           brand_id,
+         </if>
+          <if test="keywords!=null">
+           keywords,
+         </if>
+          <if test="sales!=null">
+           sales,
+         </if> 
+          <if test="description!=null">
+           description,
+         </if>
+          <if test="packageList!=null">
+           package_list,
+         </if>
+          <if test="feature!=null">
+           feature,
+         </if>
+          <if test="color!=null">
+           color,
+         </if>
+          <if test="size!=null">
+           size,
+         </if>
+       </trim>
+    VALUES   
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+         <if test="id!=null">
+           #{id},
+         </if>
+          <if test="no!=null">
+            #{no},
+         </if>
+          <if test="name!=null">
+            #{name},
+         </if>
+          <if test="weight!=null">
+            #{weight},
+         </if>
+          <if test="isNew!=null">
+            #{isNew},
+         </if>
+          <if test="isHot!=null">
+            #{isHot},
+         </if>
+          <if test="isCommend!=null">
+            #{isCommend},
+         </if>
+          <if test="createTime!=null">
+            #{createTime},
+         </if>
+          <if test="createUserId!=null">
+            #{createUserId},
+         </if>
+          <if test="checkTime!=null">
+            #{checkTime},
+         </if>
+          <if test="checkUserId!=null">
+            #{checkUserId},
+         </if>
+          <if test="isShow!=null">
+            #{isShow},
+         </if>
+          <if test="isDel!=null">
+            #{isDel},
+         </if>
+          <if test="typeId!=null">
+            #{typeId},
+         </if>
+          <if test="brandId!=null">
+            #{brandId},
+         </if>
+          <if test="keywords!=null">
+            #{keywords},
+         </if>
+          <if test="sales!=null">
+            #{sales},
+         </if> 
+          <if test="description!=null">
+            #{description},
+         </if>
+          <if test="packageList!=null">
+            #{packageList},
+         </if>
+          <if test="feature!=null">
+            #{feature},
+         </if>
+          <if test="color!=null">
+           #{color},
+         </if>
+          <if test="size!=null">
+           #{size},
+         </if>
+       </trim>
+    </insert>
+    
+    <!-- 更新操作 -->
+    <update id="updateProductByKey" parameterType="product">
+       UPDATE bbs_product
+       <set>
+			<trim suffixOverrides=",">
+				<if test="id != null">
+					id = #{id},
+				</if>
+				<if test="no != null">
+					no = #{no},
+				</if>
+				<if test="name != null">
+					name = #{name},
+				</if>
+				<if test="weight != null">
+					weight = #{weight},
+				</if>
+				<if test="isNew != null">
+					is_new = #{isNew},
+				</if>
+				<if test="isHot != null">
+					is_hot = #{isHot},
+				</if>
+				<if test="isCommend != null">
+					is_commend = #{isCommend},
+				</if>
+				<if test="createTime != null">
+					create_time = #{createTime},
+				</if>
+				<if test="createUserId != null">
+					create_user_id = #{createUserId},
+				</if>
+				<if test="checkTime != null">
+					check_time = #{checkTime},
+				</if>
+				<if test="checkUserId != null">
+					check_user_id = #{checkUserId},
+				</if>
+				<if test="isShow != null">
+					is_show = #{isShow},
+				</if>
+				<if test="isDel != null">
+					is_del = #{isDel},
+				</if>
+				<if test="typeId != null">
+					type_id = #{typeId},
+				</if>
+				<if test="brandId != null">
+					brand_id = #{brandId},
+				</if>
+				<if test="keywords != null">
+					keywords = #{keywords},
+				</if>
+				<if test="sales != null">
+					sales = #{sales},
+				</if>
+				<if test="description != null">
+					description = #{description},
+				</if>
+				<if test="packageList != null">
+					package_list = #{packageList},
+				</if>
+				<if test="feature != null">
+					feature = #{feature},
+				</if>
+				<if test="color != null">
+					color = #{color},
+				</if>
+				<if test="size != null">
+					size = #{size}
+				</if>
+			</trim>
+		</set>
+		WHERE
+		id=#{id}
+    </update>
+    
+    <!-- 删除单个 -->
+    <delete id="deleteProductOne" parameterType="int">
+      DELETE FROM bbs_product
+      WHERE id = #{id}
+    </delete>
+    <!-- 批量删除 -->
+    <delete id="deleteProductMutil" parameterType="list">
+       DELETE FROM bbs_product
+       WHERE id in
+       <foreach collection="list" item="id" separator="," open="(" close=")">
+          #{id}
+       </foreach>
+    </delete>
+    
+     <!-- resultMap映射 -->
+    <resultMap type="product" id="productFrontMap">
+        <result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="description" column="description" />
+		<result property="keywords" column="keywords" />
+		<result property="imgUrl" column="url" />
+    </resultMap>
+    
+    <!-- 查询显示前台的商品列表 -->
+    <select id="getHotProductList" parameterType="productQuery" resultMap="productFrontMap">
+		SELECT p.id,p.name,p.description, p.keywords,i.url
+		  FROM bbs_product p JOIN bbs_img i 
+		  ON p.id = i.product_id 
+		  <include refid="productWhere" />
+		  <include refid="productPage" />
+    </select>
+    
+    <select id="getProductByFilter"  resultMap="productMap">
+		 SELECT id,name,description,keywords
+		 FROM bbs_product 
+		 <include refid="ProductByFilterWhere" />
+		 <include refid="ProductFilterOrder" />
+		  Limit #{productQuery.startRow},#{productQuery.pageSize} 
+    </select>
+    
+     <!-- 查询筛选条件的记录总数 -->
+    <select id="getProductByFilterCounts" resultType="int">
+       SELECT count(1) FROM bbs_product
+      <include refid="ProductByFilterWhere" />
+    </select>
+    
+    <!-- 遍历id集合和普通字段作为查询条件的where字句 -->
+    <sql id="ProductByFilterWhere">
+      <where>
+         
+         <if test="productQuery.typeId != null">
+			and type_id=#{productQuery.typeId}
+		 </if>
+		<if test="productQuery.brandId != null">
+			and brand_id=#{productQuery.brandId}
+		</if>
+      	<if test="productQuery.feature != null">
+			<if test="productQuery.featureLike == false">
+				and feature=#{productQuery.feature}
+			</if>
+			<if test="productQuery.featureLike == true">
+				and  feature like '%${productQuery.feature}%'
+			</if>
+		</if>
+		
+		<!-- 遍历集合 -->
+         <if test="productIds!=null and productIds.size!=0">
+            and id in
+		       <foreach collection="productIds" item="id" separator="," open="(" close=")">
+		          #{id}
+		       </foreach>
+         </if>
+         <if test="productIds==null or productIds.size==0">
+            and FALSE
+         </if>
+         
+      </where>
+    </sql>
+    
+    
+</mapper>

@@ -1,0 +1,595 @@
+<html>
+<head>
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache">
+<meta http-equiv="expires" content="0">
+<meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+<meta http-equiv="description" content="This is my page">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+<title>新巴巴运动网-商品详情页</title>
+<link rel="stylesheet" href="/babasport/res/css/style.css" />
+<script src="/babasport/res/js/jquery.js"></script>
+<script type="text/javascript" src="/babasport/res/js/com.js"></script>
+<script type="text/javascript" src="/babasport/res/common/js/xiu.js"></script>
+<style type="text/css">
+.changToRed {
+	border: 2px solid #e4393c;
+	padding: 2px 4px;
+	float: left;
+	margin-right: 4px;
+	text-decoration: none;
+}
+.changToWhite {
+	border: 1px solid #ccc;
+	padding: 2px 4px;
+	float: left;
+	margin-right: 4px;
+	text-decoration: none;
+}
+.not-allow {
+	cursor: not-allowed;
+	color: #999;
+	border: 1px dashed #ccc;
+	padding: 2px 4px;
+	float: left;
+	margin-right: 4px;
+	text-decoration: none;
+}
+</style>
+</head>
+<script type="text/javascript">
+  var searchSuggest = null;
+  //页面加载完毕后 调用该函数
+  $(function(){
+	 //显示用户登陆信息
+	 showUserLoginStatusIndfo(getSearch());
+	 //默认选中第一个颜色
+	 $("#colors a:first").trigger("click");  //颜色的第一个a标签触发单击事件
+	 //设置搜索框
+	
+     searchSuggest = new oSearchSuggest(sendKeyWordToBack);
+	
+     getBuyCart(); 
+	 
+  });
+  
+  //商品颜色
+  var colorId = null;
+  //购买限制
+  var buyLimit = null;
+  //添加购物车时传递的参数
+  var skuId = null;
+  //库存
+  var stockInventory = null;
+//获取传递到改静态页面的参数信息
+function getSearch(){
+	var url = location.search;  //获取请求的请求参数 即 ？isLogin=aaa&username=bbb
+
+	//获取的请求参数（在参数未知的情况下推荐使用这种方式）
+	var params = new Object();
+	if (url.indexOf("?") != -1) {
+		var str = url.substr(1)　 //去掉?号
+			strs = str.split("&");
+		for (var i = 0; i < strs.length; i++) {　
+			params[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+			
+		}
+	}
+	//console.log(params["isLogin"]);
+	//console.log(params["username"]);
+	return params;
+}  
+var isLogin = null;
+var username = null;
+
+//显示用户的登录状态信息 
+function showUserLoginStatusIndfo(params){
+	isLogin = params["isLogin"];
+	username = params["username"];
+	
+	//用户登录
+	if(isLogin=="true"){
+		//设置用户信息
+		$("#username").html(username);
+		//隐藏未现实的登录页面
+		$("#nologin").css("display","none");
+		//显示用户登录的页面
+		$("#logined").css("display","inline");
+	}else if(isLogin=="false"){//未登录
+		//隐藏用户登录页面
+		$("#logined").css("display","none");
+		//显示用户未登录的页面
+		$("#nologin").css("display","inline");
+	}
+	
+	
+}
+//使用ajax获取搜索数据
+function sendKeyWordToBack(keyword) {
+	$.ajax(
+		{ 
+		 url:'/babasport/front/productSearch.shtml',
+		 type:"POST",
+		 contentType:"application/json",
+		 data:keyword,
+		 dataType:"json",
+		 success:function(data){
+			 var aData = [];
+			 for(i in data){
+				aData.push('<span>'+data[i]+'</span>');
+		     }
+			//将返回的数据传递给实现搜索输入框的输入提示js类 
+			searchSuggest.dataDisplay(aData);
+		 },
+		 error:function(error){
+			 console.log("ajax 失败");
+		 }
+		}
+	);
+}
+ 
+ 
+//单击搜索商品的搜索按钮
+function getSearchProduct(){
+		var keyword = $('#gover_search_key').val();
+		
+		window.location.href="/babasport/front/getproduct.shtml?keyword="+keyword;
+	}
+
+//登陆
+function login(){
+	window.location.href = "/babasport/front/user/login.shtml?returnUrl="+window.location.href;
+}
+//登出
+function logout(){
+	window.location.href = "/babasport/front/user/logout.shtml?returnUrl="+window.location.href;
+}
+ 
+//加入购物车
+function addCart(){
+	
+	//获取商品购买数量
+	var account = $("#num").val();
+	
+	window.location.href= "/babasport/front/shopping/addShoppCart.shtml?productId=9&skuId="+skuId
+			  +"&account="+account+"&buyLimit="+buyLimit+"&stockInventory="+stockInventory;
+	
+	alert("添加购物车成功!");
+}
+//立即购买
+function buy(){
+	window.location.href='cart.jsp';
+}
+ 
+ //选中颜色
+ function colorToRed(target,id){
+     colorId =	id;
+	 //清除所有的边框颜色
+	 $("#colors a").each(function(){
+		 $(this).attr("class","changToWhite");
+	 });
+	 //设置当前点击的a标签边框变红
+	 $(target).attr("class","changToRed");
+	 
+	 //设置尺码(可选 不可选) 根据颜色id 查询对应的sku,判断sku 分别为 ‘S,M,L.XXL’ 判断是否存在 设置不同的class
+	 
+	 //先清除尺寸的所有边框颜色
+	 $("#sizes a").each(function(){
+		 $(this).attr("class","not-allow");
+	 });
+	 var flag = 0;
+	   if('10'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'S').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111805002243.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111805002243.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '136';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'S').attr("class","changToWhite");
+           }
+	   }  
+	   if('10'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'M').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111814298791.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111814298791.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '137';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'M').attr("class","changToWhite");
+           }
+	   }  
+	   if('10'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'L').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111820511507.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111820511507.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '138';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'L').attr("class","changToWhite");
+           }
+	   }  
+	   if('10'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'XXL').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111826898512.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111826898512.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '139';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'XXL').attr("class","changToWhite");
+           }
+	   }  
+	   if('14'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'S').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111833896855.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111833896855.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '140';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'S').attr("class","changToWhite");
+           }
+	   }  
+	   if('14'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'M').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111842320874.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111842320874.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '141';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'M').attr("class","changToWhite");
+           }
+	   }  
+	   if('14'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'L').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111849574671.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111849574671.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '142';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'L').attr("class","changToWhite");
+           }
+	   }  
+	   if('14'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'XXL').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106101855746691.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106101855746691.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '143';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'XXL').attr("class","changToWhite");
+           }
+	   }  
+	   if('16'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'S').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111856986895.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111856986895.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '144';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'S').attr("class","changToWhite");
+           }
+	   }  
+	   if('16'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'M').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111904738415.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111904738415.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '145';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'M').attr("class","changToWhite");
+           }
+	   }  
+	   if('16'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'L').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111925953636.jpg");
+             $("#showImg").attr("href","http://127.0.0.1:8088/babasportImgService/uploadImg/sku/20180106111925953636.jpg");
+             //重新加载扩大镜
+             $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+             //skuId 添加购物车时需要传递的参数
+             skuId = '146';
+             
+             //限购
+             buyLimit = '20';
+             //获取库存
+             stockInventory = '200'
+           }else{
+		      //要给所有可点击的size设置为白色边框
+        	   $("#" + 'L').attr("class","changToWhite");
+           }
+	   }  
+	   if('16'==id){  //该判断条件 会根据后台具有多少类型的尺寸，则进入几次
+           if(flag==0){
+             //默认选中可用的第一个尺寸 并设置对应该sku的其他信息如市场价 库存，购买限制  显示的图片（扩大镜）
+		     $("#" + 'XXL').attr("class","changToRed");
+             flag = 1;
+             //巴巴价   
+             $("#price").html("￥" + '259.23');
+             //市场价
+             $("#mprice").html("￥" + '205.52');
+             //运费
+             $("#fee").html('10');
+             //库存
+             $("#stock").html('200');
+             //显示图片 skuImg/showImg
+             $("#skuImg").attr("src","http://127.0.0.1:8088/babasportImgService/
+Expression sku.skuImg is undefined on line 199, column 51 in productDetail.html.
+The problematic instruction:
+----------
+==> ${sku.skuImg} [on line 199, column 49 in productDetail.html]
+----------
+
+Java backtrace for programmers:
+----------
+freemarker.core.InvalidReferenceException: Expression sku.skuImg is undefined on line 199, column 51 in productDetail.html.
+	at freemarker.core.TemplateObject.assertNonNull(TemplateObject.java:124)
+	at freemarker.core.Expression.getStringValue(Expression.java:118)
+	at freemarker.core.Expression.getStringValue(Expression.java:93)
+	at freemarker.core.DollarVariable.accept(DollarVariable.java:76)
+	at freemarker.core.Environment.visit(Environment.java:196)
+	at freemarker.core.MixedContent.accept(MixedContent.java:92)
+	at freemarker.core.Environment.visit(Environment.java:196)
+	at freemarker.core.IteratorBlock$Context.runLoop(IteratorBlock.java:172)
+	at freemarker.core.Environment.visit(Environment.java:351)
+	at freemarker.core.IteratorBlock.accept(IteratorBlock.java:95)
+	at freemarker.core.Environment.visit(Environment.java:196)
+	at freemarker.core.MixedContent.accept(MixedContent.java:92)
+	at freemarker.core.Environment.visit(Environment.java:196)
+	at freemarker.core.Environment.process(Environment.java:176)
+	at freemarker.template.Template.process(Template.java:232)
+	at cn.babasport.xiu.core.staticpage.service.FreemarkTemplateServiceImpl.createStaticPage(FreemarkTemplateServiceImpl.java:50)
+	at cn.babasport.xiu.core.controller.back.ProductController.createProductStaticPage(ProductController.java:268)
+	at cn.babasport.xiu.core.controller.back.ProductController.putOnsale(ProductController.java:214)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.springframework.web.bind.annotation.support.HandlerMethodInvoker.invokeHandlerMethod(HandlerMethodInvoker.java:176)
+	at org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter.invokeHandlerMethod(AnnotationMethodHandlerAdapter.java:440)
+	at org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter.handle(AnnotationMethodHandlerAdapter.java:428)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:925)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:856)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:936)
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:838)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:648)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:812)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:729)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:230)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:165)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:192)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:165)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:88)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:192)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:165)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:198)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:108)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:472)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:140)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:79)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:620)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:349)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:783)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:789)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1455)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)

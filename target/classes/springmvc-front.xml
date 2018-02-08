@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="
+     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+     http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+     http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+     http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+     http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+     
+   <!-- 扫描含有@Controller注解的包 -->
+   <context:component-scan base-package="cn.babasport.xiu" use-default-filters="false">
+     <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+   </context:component-scan>
+    
+   <!-- 注册日期转换类 --> 
+   <bean id="conversionService"
+        class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <!-- 指定自定义转换器的全路径名称 -->
+                <bean class="cn.babasport.xiu.common.utils.DateConverter"/>
+            </set>
+        </property>
+    </bean>
+    
+    <!-- 将日期转化服务类配置到springmvc中 使用该注解后不需要单独配置json类型的转换类了 -->
+    <mvc:annotation-driven conversion-service="conversionService" />
+    
+    
+   
+   <mvc:interceptors>
+      <mvc:interceptor>
+        <mvc:mapping path="/**"/>
+        <bean class="cn.babasport.xiu.core.interceptor.LoginInterceptor" />
+      </mvc:interceptor>
+      
+   </mvc:interceptors>
+    
+   <!-- jsp视图 -->
+	<bean id="jspViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/front_page/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+
+	<!--上传图片-->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!--最大上传尺寸  B		1M=104875B-->
+		<property name="maxUploadSize" value="1048576" />
+	</bean>
+     
+ </beans>
